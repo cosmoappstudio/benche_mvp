@@ -1,0 +1,5 @@
+{
+  "name": "Benche",
+  "description": "A personalized daily life guide app offering AI-curated recommendations based on your daily energy.",
+  "requestFramePermissions": ["geolocation"]
+}

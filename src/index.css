@@ -1,0 +1,48 @@
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&family=Inter:wght@300;400;500;600&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --font-display: "Outfit", sans-serif;
+  --font-body: "Inter", sans-serif;
+
+  --color-background: #0A0A1A;
+  --color-primary-start: #7B2FFF;
+  --color-primary-end: #00D4FF;
+  --color-secondary-start: #FF6B35;
+  --color-secondary-end: #FFD700;
+  --color-like: #FF4D6D;
+  --color-dislike: #6B7280;
+  --color-card-surface: rgba(255, 255, 255, 0.08);
+  --color-card-border: rgba(255, 255, 255, 0.15);
+  --color-text-primary: #FFFFFF;
+  --color-text-secondary: #A0A0C0;
+}
+
+body {
+  background-color: var(--color-background);
+  color: var(--color-text-primary);
+  font-family: var(--font-body);
+  overflow-x: hidden;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-display);
+}
+
+.glass-card {
+  background: var(--color-card-surface);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid var(--color-card-border);
+  border-radius: 24px;
+}
+
+.neon-glow {
+  box-shadow: 0 0 15px rgba(123, 47, 255, 0.5);
+}
+
+.gradient-text {
+  background: linear-gradient(to right, var(--color-primary-start), var(--color-primary-end));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
