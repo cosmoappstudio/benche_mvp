@@ -8,7 +8,9 @@ import { Inter_400Regular, Inter_500Medium } from "@expo-google-fonts/inter";
 import { View, Text, ActivityIndicator, Pressable } from "react-native";
 import { initAnonymousSession } from "@/lib/auth";
 import { initAnalytics } from "@/lib/analytics";
-import { initRevenueCat, checkProStatus } from "@/lib/revenuecat";
+import { initRevenueCat, getProInfo } from "@/lib/revenuecat";
+import { getInitialUtm } from "@/lib/utm";
+import { syncProfileProUtm } from "@/lib/db";
 import { initMeta } from "@/lib/meta";
 import { useUserStore } from "@/stores/userStore";
 import { TRANSLATIONS } from "@/constants/translations";
@@ -45,11 +47,21 @@ export default function RootLayout() {
         }
         try {
           await initRevenueCat(userId);
-          try {
-            setIsPro(await checkProStatus());
-          } catch {
-            setIsPro(false);
-          }
+          const proInfo = await getProInfo();
+          setIsPro(proInfo.isPro);
+
+          const utm = await getInitialUtm();
+          await syncProfileProUtm({
+            userId,
+            isPro: proInfo.isPro,
+            proProductId: proInfo.productId,
+            ...(utm && {
+              utmSource: utm.utmSource ?? null,
+              utmMedium: utm.utmMedium ?? null,
+              utmCampaign: utm.utmCampaign ?? null,
+              referrer: utm.referrer ?? null,
+            }),
+          });
         } catch {
           setIsPro(false);
         }

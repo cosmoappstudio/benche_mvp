@@ -18,6 +18,15 @@ export async function upsertProfile(params: {
   locationCity?: string;
   interests?: string[];
   expoPushToken?: string | null;
+  deviceOs?: string;
+  deviceModel?: string;
+  totalPlansCreated?: number;
+  isPro?: boolean;
+  proProductId?: string | null;
+  utmSource?: string | null;
+  utmMedium?: string | null;
+  utmCampaign?: string | null;
+  referrer?: string | null;
 }) {
   const row: Record<string, unknown> = {
     id: params.userId,
@@ -28,6 +37,33 @@ export async function upsertProfile(params: {
   };
   if (params.expoPushToken !== undefined) {
     row.expo_push_token = params.expoPushToken;
+  }
+  if (params.deviceOs !== undefined) {
+    row.device_os = params.deviceOs;
+  }
+  if (params.deviceModel !== undefined) {
+    row.device_model = params.deviceModel;
+  }
+  if (params.totalPlansCreated !== undefined) {
+    row.total_plans_created = params.totalPlansCreated;
+  }
+  if (params.isPro !== undefined) {
+    row.is_pro = params.isPro;
+  }
+  if (params.proProductId !== undefined) {
+    row.pro_product_id = params.proProductId;
+  }
+  if (params.utmSource !== undefined) {
+    row.utm_source = params.utmSource;
+  }
+  if (params.utmMedium !== undefined) {
+    row.utm_medium = params.utmMedium;
+  }
+  if (params.utmCampaign !== undefined) {
+    row.utm_campaign = params.utmCampaign;
+  }
+  if (params.referrer !== undefined) {
+    row.referrer = params.referrer;
   }
   const { error } = await supabase.from("profiles").upsert(row, {
     onConflict: "id",
@@ -47,6 +83,41 @@ export async function updateProfilePushToken(
     .eq("id", userId);
   if (error) {
     console.warn("[db] updateProfilePushToken error:", error.message);
+  }
+}
+
+/** Plan oluşturulduğunda total_plans_created artır */
+export async function incrementProfileTotalPlans(userId: string): Promise<void> {
+  const { error } = await supabase.rpc("increment_profile_total_plans", {
+    p_user_id: userId,
+  });
+  if (error) {
+    console.warn("[db] incrementProfileTotalPlans error:", error.message);
+  }
+}
+
+/** PRO + UTM bilgisini güncelle (bootstrap'ta) */
+export async function syncProfileProUtm(params: {
+  userId: string;
+  isPro?: boolean;
+  proProductId?: string | null;
+  utmSource?: string | null;
+  utmMedium?: string | null;
+  utmCampaign?: string | null;
+  referrer?: string | null;
+}): Promise<void> {
+  const updates: Record<string, unknown> = {};
+  if (params.isPro !== undefined) updates.is_pro = params.isPro;
+  if (params.proProductId !== undefined) updates.pro_product_id = params.proProductId;
+  if (params.utmSource !== undefined) updates.utm_source = params.utmSource;
+  if (params.utmMedium !== undefined) updates.utm_medium = params.utmMedium;
+  if (params.utmCampaign !== undefined) updates.utm_campaign = params.utmCampaign;
+  if (params.referrer !== undefined) updates.referrer = params.referrer;
+  if (Object.keys(updates).length === 0) return;
+
+  const { error } = await supabase.from("profiles").update(updates).eq("id", params.userId);
+  if (error) {
+    console.warn("[db] syncProfileProUtm error:", error.message);
   }
 }
 

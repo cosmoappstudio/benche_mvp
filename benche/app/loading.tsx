@@ -14,7 +14,7 @@ import { useSelectionStore } from "@/stores/selectionStore";
 import { useUserStore } from "@/stores/userStore";
 import { useFeedbackStore } from "@/stores/feedbackStore";
 import { useRecommendationsStore } from "@/stores/recommendationsStore";
-import { saveDailyCard, updateDailyCardRecommendations } from "@/lib/db";
+import { saveDailyCard, updateDailyCardRecommendations, incrementProfileTotalPlans } from "@/lib/db";
 import { generateRecommendations } from "@/lib/recommendations";
 import { TRANSLATIONS } from "@/constants/translations";
 import { colors } from "@/constants/colors";
@@ -99,7 +99,10 @@ export default function LoadingScreen() {
           selectedLetter: letter,
           selectedNumber: number ?? 0,
         });
-        if (!cancelled && savedCardId) setCardId(savedCardId);
+        if (!cancelled && savedCardId) {
+          setCardId(savedCardId);
+          incrementProfileTotalPlans(supabaseUserId);
+        }
       }
 
       const city = locationCity || "Bilinmiyor";

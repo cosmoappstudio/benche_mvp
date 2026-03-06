@@ -13,8 +13,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Benche Push Dashboard",
-  description: "Expo Push Notification Dashboard",
+  title: "Benche Admin Dashboard",
+  description: "Admin dashboard - analytics & push notifications",
 };
 
 export default function RootLayout({

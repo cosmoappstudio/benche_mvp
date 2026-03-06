@@ -5,6 +5,7 @@ import { requestNotificationPermission } from "@/lib/permissions";
 import { useUserStore } from "@/stores/userStore";
 import { track } from "@/lib/analytics";
 import { upsertProfile } from "@/lib/db";
+import { getDeviceInfo } from "@/lib/device";
 import { colors } from "@/constants/colors";
 import { TRANSLATIONS } from "@/constants/translations";
 import { Screen } from "@/components/ui/Screen";
@@ -36,6 +37,7 @@ export default function NotificationScreen() {
       track("onboarding_notification_denied");
     }
     if (supabaseUserId) {
+      const { deviceOs, deviceModel } = getDeviceInfo();
       await upsertProfile({
         userId: supabaseUserId,
         language,
@@ -43,6 +45,8 @@ export default function NotificationScreen() {
         locationCity: locationCity || undefined,
         interests: interests?.length ? interests : undefined,
         expoPushToken: expoPushToken ?? undefined,
+        deviceOs,
+        deviceModel,
       });
     }
     await finishOnboarding();
@@ -52,12 +56,15 @@ export default function NotificationScreen() {
     track("onboarding_notification_denied");
     setNotificationsEnabled(false);
     if (supabaseUserId) {
+      const { deviceOs, deviceModel } = getDeviceInfo();
       await upsertProfile({
         userId: supabaseUserId,
         language,
         locationCountry: locationCountry || undefined,
         locationCity: locationCity || undefined,
         interests: interests?.length ? interests : undefined,
+        deviceOs,
+        deviceModel,
       });
     }
     finishOnboarding();

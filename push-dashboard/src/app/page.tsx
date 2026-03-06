@@ -1,178 +1,188 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+  PieChart,
+  Pie,
+  Cell,
+} from "recharts";
+import type { AnalyticsData } from "@/app/api/analytics/route";
+import DashboardLayout from "@/components/DashboardLayout";
 
-export default function DashboardPage() {
-  const [title, setTitle] = useState("");
-  const [body, setBody] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [result, setResult] = useState<{
-    sent?: number;
-    failed?: number;
-    total?: number;
-    error?: string;
-  } | null>(null);
-  const [subscribers, setSubscribers] = useState<number | null>(null);
-  const [secret, setSecret] = useState("");
+const CHART_COLORS = ["#8B5CF6", "#A78BFA", "#C4B5FD", "#7C3AED", "#6D28D9"];
+
+export default function OverviewPage() {
+  const [data, setData] = useState<AnalyticsData | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const s = localStorage.getItem("dashboard_secret") ?? "";
-    setSecret(s);
-    if (s) fetchStats(s);
+    if (!s) return;
+    fetch("/api/analytics", { headers: { "x-dashboard-secret": s } })
+      .then((r) => (r.ok ? r.json() : Promise.reject(new Error("Auth failed"))))
+      .then(setData)
+      .catch((e) => setError(e.message))
+      .finally(() => setLoading(false));
   }, []);
 
-  const fetchStats = async (s: string) => {
-    try {
-      const res = await fetch("/api/stats", {
-        headers: { "x-dashboard-secret": s },
-      });
-      if (res.ok) {
-        const data = await res.json();
-        setSubscribers(data.subscribers ?? 0);
-      }
-    } catch {
-      setSubscribers(null);
-    }
-  };
+  if (loading) {
+    return (
+      <DashboardLayout>
+        <div className="flex items-center justify-center h-64 text-white/60">
+          Yükleniyor...
+        </div>
+      </DashboardLayout>
+    );
+  }
 
-  const handleSend = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!secret.trim()) {
-      setResult({ error: "Önce secret girin ve kaydedin" });
-      return;
-    }
-    setLoading(true);
-    setResult(null);
-    try {
-      const res = await fetch("/api/send-push", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "x-dashboard-secret": secret,
-        },
-        body: JSON.stringify({ title, body }),
-      });
-      const data = await res.json();
-      if (!res.ok) {
-        setResult({ error: data.error ?? "Gönderim hatası" });
-      } else {
-        setResult({ sent: data.sent, failed: data.failed, total: data.total });
-        fetchStats(secret);
-      }
-    } catch (err) {
-      setResult({ error: err instanceof Error ? err.message : "Unknown error" });
-    } finally {
-      setLoading(false);
-    }
-  };
+  if (error || !data) {
+    return (
+      <DashboardLayout>
+        <div className="text-red-400">Veri yüklenemedi: {error ?? "Bilinmeyen hata"}</div>
+      </DashboardLayout>
+    );
+  }
 
-  const saveSecret = () => {
-    if (secret.trim()) {
-      localStorage.setItem("dashboard_secret", secret.trim());
-      fetchStats(secret.trim());
-    }
-  };
+  const { overview } = data;
+
+  const kpis = [
+    { label: "Toplam Kullanıcı", value: overview.totalUsers },
+    { label: "Toplam Plan", value: overview.totalPlans },
+    { label: "PRO Kullanıcı", value: `${overview.proUsers} (${overview.proRate}%)` },
+    { label: "Push Abonesi", value: overview.pushSubscribers },
+    { label: "Bugün Yeni", value: overview.newUsersToday },
+    { label: "Bu Hafta Yeni", value: overview.newUsersThisWeek },
+  ];
 
   return (
-    <div className="min-h-screen bg-[#0A0A1A] text-white p-6 md:p-12">
-      <div className="max-w-xl mx-auto space-y-8">
+    <DashboardLayout>
+      <div className="space-y-8">
         <header>
-          <h1 className="text-2xl font-bold text-white">Benche Push</h1>
-          <p className="text-white/60 mt-1">Expo Push Notification Dashboard</p>
+          <h1 className="text-2xl font-bold text-white">Overview</h1>
+          <p className="text-white/60 mt-1">Kullanıcı ve engagement metrikleri</p>
         </header>
 
-        <div className="rounded-xl bg-white/5 border border-white/10 p-4">
-          <label className="block text-sm font-medium text-white/80 mb-2">
-            Dashboard Secret
-          </label>
-          <div className="flex gap-2">
-            <input
-              type="password"
-              value={secret}
-              onChange={(e) => setSecret(e.target.value)}
-              placeholder="DASHBOARD_SECRET"
-              className="flex-1 px-3 py-2 rounded-lg bg-white/5 border border-white/10 text-white placeholder:text-white/40 focus:outline-none focus:ring-2 focus:ring-purple-500"
-            />
-            <button
-              onClick={saveSecret}
-              className="px-4 py-2 rounded-lg bg-purple-600 hover:bg-purple-500 text-white font-medium"
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+          {kpis.map(({ label, value }) => (
+            <div
+              key={label}
+              className="rounded-xl bg-white/5 border border-white/10 p-4"
             >
-              Kaydet
-            </button>
-          </div>
-          <p className="text-xs text-white/60 mt-2">
-            Vercel env&apos;de DASHBOARD_SECRET ile eşleşmeli
-          </p>
+              <p className="text-xs text-white/60 uppercase tracking-wider">{label}</p>
+              <p className="text-xl font-bold text-white mt-1">{value}</p>
+            </div>
+          ))}
         </div>
 
-        {subscribers !== null && (
+        <div className="grid md:grid-cols-2 gap-6">
           <div className="rounded-xl bg-white/5 border border-white/10 p-4">
-            <p className="text-white/60">Push abonesi</p>
-            <p className="text-2xl font-bold text-white">{subscribers}</p>
-          </div>
-        )}
-
-        <form onSubmit={handleSend} className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-white/80 mb-2">
-              Başlık
-            </label>
-            <input
-              type="text"
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              placeholder="Bugünkü enerjini seç ✨"
-              required
-              maxLength={100}
-              className="w-full px-3 py-2 rounded-lg bg-white/5 border border-white/10 text-white placeholder:text-white/40 focus:outline-none focus:ring-2 focus:ring-purple-500"
-            />
-            <p className="text-xs text-white/60 mt-1">{title.length}/100</p>
+            <h2 className="text-sm font-semibold text-white mb-4">Dil Dağılımı</h2>
+            <div className="h-64">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={data.byLanguage} margin={{ top: 0, right: 0, left: 0, bottom: 0 }}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.1)" />
+                  <XAxis dataKey="language" stroke="rgba(255,255,255,0.5)" fontSize={12} />
+                  <YAxis stroke="rgba(255,255,255,0.5)" fontSize={12} />
+                  <Tooltip
+                    contentStyle={{ backgroundColor: "#1a1a2e", border: "1px solid rgba(255,255,255,0.1)" }}
+                    labelStyle={{ color: "#fff" }}
+                  />
+                  <Bar dataKey="count" fill="#8B5CF6" radius={[4, 4, 0, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
           </div>
 
-          <div>
-            <label className="block text-sm font-medium text-white/80 mb-2">
-              Mesaj
-            </label>
-            <textarea
-              value={body}
-              onChange={(e) => setBody(e.target.value)}
-              placeholder="Güne Benche ile başla — 5 seçim, tüm gün hallolsun."
-              required
-              maxLength={500}
-              rows={3}
-              className="w-full px-3 py-2 rounded-lg bg-white/5 border border-white/10 text-white placeholder:text-white/40 focus:outline-none focus:ring-2 focus:ring-purple-500 resize-none"
-            />
-            <p className="text-xs text-white/60 mt-1">{body.length}/500</p>
+          <div className="rounded-xl bg-white/5 border border-white/10 p-4">
+            <h2 className="text-sm font-semibold text-white mb-4">Platform (OS)</h2>
+            <div className="h-64">
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie
+                    data={data.byDeviceOs}
+                    dataKey="count"
+                    nameKey="os"
+                    cx="50%"
+                    cy="50%"
+                    outerRadius={80}
+                  >
+                    {data.byDeviceOs.map((_, i) => (
+                      <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} />
+                    ))}
+                  </Pie>
+                  <Tooltip
+                    contentStyle={{ backgroundColor: "#1a1a2e", border: "1px solid rgba(255,255,255,0.1)" }}
+                  />
+                </PieChart>
+              </ResponsiveContainer>
+            </div>
           </div>
 
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full py-3 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 disabled:opacity-50 text-white font-semibold text-center"
-          >
-            {loading ? "Gönderiliyor..." : "Gönder"}
-          </button>
-        </form>
-
-        {result && (
-          <div
-            className={`rounded-xl p-4 ${
-              result.error
-                ? "bg-red-500/20 border border-red-500/30"
-                : "bg-green-500/20 border border-green-500/30"
-            }`}
-          >
-            {result.error ? (
-              <p className="text-red-400">{result.error}</p>
-            ) : (
-              <p className="text-green-400">
-                {result.sent} / {result.total} gönderildi
-                {result.failed ? ` (${result.failed} hata)` : ""}
-              </p>
-            )}
+          <div className="rounded-xl bg-white/5 border border-white/10 p-4">
+            <h2 className="text-sm font-semibold text-white mb-4">UTM Source (Acquisition)</h2>
+            <div className="h-64">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={data.byUtmSource} margin={{ top: 0, right: 0, left: 0, bottom: 0 }}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.1)" />
+                  <XAxis dataKey="source" stroke="rgba(255,255,255,0.5)" fontSize={12} />
+                  <YAxis stroke="rgba(255,255,255,0.5)" fontSize={12} />
+                  <Tooltip
+                    contentStyle={{ backgroundColor: "#1a1a2e", border: "1px solid rgba(255,255,255,0.1)" }}
+                  />
+                  <Bar dataKey="count" fill="#06B6D4" radius={[4, 4, 0, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
           </div>
-        )}
+
+          <div className="rounded-xl bg-white/5 border border-white/10 p-4">
+            <h2 className="text-sm font-semibold text-white mb-4">Plan Sayısı Dağılımı</h2>
+            <div className="h-64">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={data.plansDistribution} margin={{ top: 0, right: 0, left: 0, bottom: 0 }}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.1)" />
+                  <XAxis dataKey="range" stroke="rgba(255,255,255,0.5)" fontSize={12} />
+                  <YAxis stroke="rgba(255,255,255,0.5)" fontSize={12} />
+                  <Tooltip
+                    contentStyle={{ backgroundColor: "#1a1a2e", border: "1px solid rgba(255,255,255,0.1)" }}
+                  />
+                  <Bar dataKey="count" fill="#10B981" radius={[4, 4, 0, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
+        </div>
+
+        <div className="rounded-xl bg-white/5 border border-white/10 p-4">
+          <h2 className="text-sm font-semibold text-white mb-4">Top 10 Cihaz Modeli</h2>
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="text-white/60 border-b border-white/10">
+                  <th className="text-left py-2 px-3">Model</th>
+                  <th className="text-right py-2 px-3">Kullanıcı</th>
+                </tr>
+              </thead>
+              <tbody>
+                {data.topDevices.map(({ model, count }) => (
+                  <tr key={model} className="border-b border-white/5">
+                    <td className="py-2 px-3 text-white">{model}</td>
+                    <td className="py-2 px-3 text-right text-white/80">{count}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
       </div>
-    </div>
+    </DashboardLayout>
   );
 }

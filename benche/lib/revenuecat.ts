@@ -18,3 +18,21 @@ export const checkProStatus = async (): Promise<boolean> => {
   const { entitlements } = await Purchases.getCustomerInfo();
   return entitlements.active["benche_pro"] !== undefined;
 };
+
+export interface ProInfo {
+  isPro: boolean;
+  productId: string | null;
+}
+
+/** PRO durumu ve paket bilgisi */
+export const getProInfo = async (): Promise<ProInfo> => {
+  try {
+    const info = await Purchases.getCustomerInfo();
+    const entitlement = info.entitlements.active["benche_pro"];
+    const isPro = !!entitlement;
+    const productId = entitlement?.productIdentifier ?? null;
+    return { isPro, productId };
+  } catch {
+    return { isPro: false, productId: null };
+  }
+};
