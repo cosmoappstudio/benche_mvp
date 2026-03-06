@@ -4,6 +4,7 @@
   "main": "expo-router/entry",
   "scripts": {
     "start": "lsof -ti:8081 | xargs kill -9 2>/dev/null; CI=false expo start --lan --port 8081",
+    "start:tunnel": "lsof -ti:8081 | xargs kill -9 2>/dev/null; CI=false expo start --tunnel --port 8081",
     "android": "expo start --android",
     "ios": "expo start --ios",
     "web": "expo start --web"
@@ -27,10 +28,14 @@
     "expo-notifications": "~0.32.16",
     "expo-router": "~6.0.23",
     "expo-status-bar": "~3.0.9",
+    "expo-tiktok-business": "^0.1.2",
+    "expo-updates": "~29.0.16",
     "nativewind": "^4.2.2",
-    "react": "19.1.0",
+    "react": "19.2.4",
     "react-native": "0.81.5",
+    "react-native-fbsdk-next": "^13.4.3",
     "react-native-purchases": "^9.11.0",
+    "react-native-purchases-ui": "^9.11.2",
     "react-native-reanimated": "~4.1.1",
     "react-native-safe-area-context": "~5.6.0",
     "react-native-screens": "~4.16.0",
