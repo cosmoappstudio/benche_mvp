@@ -144,12 +144,18 @@ export default function PushPage() {
               onChange={(e) => setSegmentId(e.target.value)}
               className="w-full px-3 py-2 rounded-lg bg-white/5 border border-white/10 text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
             >
+              <option value="">Tümü (segment yoksa)</option>
               {segments.map((s) => (
                 <option key={s.id} value={s.id}>
                   {s.name} {s.description ? `— ${s.description}` : ""}
                 </option>
               ))}
             </select>
+            {segments.length === 0 && (
+              <p className="text-xs text-amber-400/80 mt-1">
+                Segmentler yüklenemedi. Migration çalıştırdın mı? Tümüne gönderilecek.
+              </p>
+            )}
           </div>
 
           <div>
