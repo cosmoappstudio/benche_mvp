@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSupabaseAdmin } from "@/lib/supabase";
+import { getProfilesBySegment, type SegmentRules } from "@/lib/pushSegments";
 
 const EXPO_PUSH_URL = "https://exp.host/--/api/v2/push/send";
 
@@ -10,32 +11,55 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const { title, body } = await req.json();
-    if (!title || !body) {
+    const body = await req.json();
+    const { title, body: msgBody, segmentId } = body;
+
+    if (!title || !msgBody) {
       return NextResponse.json(
         { error: "title and body required" },
         { status: 400 }
       );
     }
 
-    const { data: profiles, error } = await getSupabaseAdmin()
-      .from("profiles")
-      .select("expo_push_token")
-      .not("expo_push_token", "is", null);
+    const supabase = getSupabaseAdmin();
+    let profiles: { id: string; expo_push_token: string }[];
 
-    if (error) {
-      console.error("[send-push] Supabase error:", error);
-      return NextResponse.json({ error: error.message }, { status: 500 });
+    if (segmentId) {
+      const { data: segment, error: segError } = await supabase
+        .from("push_segments")
+        .select("rules")
+        .eq("id", segmentId)
+        .single();
+
+      if (segError || !segment) {
+        return NextResponse.json({ error: "Segment not found" }, { status: 404 });
+      }
+
+      profiles = await getProfilesBySegment(
+        supabase,
+        (segment.rules ?? {}) as SegmentRules
+      );
+    } else {
+      const { data, error } = await supabase
+        .from("profiles")
+        .select("id, expo_push_token")
+        .not("expo_push_token", "is", null);
+
+      if (error) throw error;
+      profiles = (data ?? []).filter((p) => p.expo_push_token) as {
+        id: string;
+        expo_push_token: string;
+      }[];
     }
 
-    const tokens = (profiles ?? [])
-      .map((p) => p.expo_push_token)
-      .filter((t): t is string => !!t);
+    const tokens = profiles.map((p) => p.expo_push_token);
 
     if (tokens.length === 0) {
       return NextResponse.json({
         sent: 0,
-        message: "No push tokens found",
+        failed: 0,
+        total: 0,
+        message: "No push tokens found for segment",
       });
     }
 
@@ -48,7 +72,7 @@ export async function POST(req: NextRequest) {
       const messages = chunk.map((to) => ({
         to,
         title: String(title).slice(0, 100),
-        body: String(body).slice(0, 500),
+        body: String(msgBody).slice(0, 500),
         sound: "default",
       }));
 

@@ -57,6 +57,7 @@ export default function DashboardLayout({
   const nav = [
     { href: "/", label: "Overview" },
     { href: "/push", label: "Push" },
+    { href: "/auto-push", label: "Otomatik Push" },
   ];
 
   return (
