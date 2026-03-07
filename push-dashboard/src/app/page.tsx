@@ -66,26 +66,26 @@ export default function OverviewPage() {
     <DashboardLayout>
       <div className="space-y-8">
         <header>
-          <h1 className="text-2xl font-bold text-white">Overview</h1>
-          <p className="text-white/60 mt-1">Kullanıcı ve engagement metrikleri</p>
+          <h1 className="text-xl sm:text-2xl font-bold text-white">Overview</h1>
+          <p className="text-white/60 mt-1 text-sm sm:text-base">Kullanıcı ve engagement metrikleri</p>
         </header>
 
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3 sm:gap-4">
           {kpis.map(({ label, value }) => (
             <div
               key={label}
-              className="rounded-xl bg-white/5 border border-white/10 p-4"
+              className="rounded-xl bg-white/5 border border-white/10 p-3 sm:p-4"
             >
-              <p className="text-xs text-white/60 uppercase tracking-wider">{label}</p>
-              <p className="text-xl font-bold text-white mt-1">{value}</p>
+              <p className="text-xs text-white/60 uppercase tracking-wider truncate">{label}</p>
+              <p className="text-lg sm:text-xl font-bold text-white mt-1">{value}</p>
             </div>
           ))}
         </div>
 
-        <div className="grid md:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
           <div className="rounded-xl bg-white/5 border border-white/10 p-4">
             <h2 className="text-sm font-semibold text-white mb-4">Dil Dağılımı</h2>
-            <div className="h-64">
+            <div className="h-48 sm:h-64 min-w-0">
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={data.byLanguage} margin={{ top: 0, right: 0, left: 0, bottom: 0 }}>
                   <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.1)" />
@@ -103,7 +103,7 @@ export default function OverviewPage() {
 
           <div className="rounded-xl bg-white/5 border border-white/10 p-4">
             <h2 className="text-sm font-semibold text-white mb-4">Platform (OS)</h2>
-            <div className="h-64">
+            <div className="h-48 sm:h-64 min-w-0">
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
                   <Pie
@@ -128,7 +128,7 @@ export default function OverviewPage() {
 
           <div className="rounded-xl bg-white/5 border border-white/10 p-4">
             <h2 className="text-sm font-semibold text-white mb-4">UTM Source (Acquisition)</h2>
-            <div className="h-64">
+            <div className="h-48 sm:h-64 min-w-0">
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={data.byUtmSource} margin={{ top: 0, right: 0, left: 0, bottom: 0 }}>
                   <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.1)" />
@@ -145,7 +145,7 @@ export default function OverviewPage() {
 
           <div className="rounded-xl bg-white/5 border border-white/10 p-4">
             <h2 className="text-sm font-semibold text-white mb-4">Plan Sayısı Dağılımı</h2>
-            <div className="h-64">
+            <div className="h-48 sm:h-64 min-w-0">
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={data.plansDistribution} margin={{ top: 0, right: 0, left: 0, bottom: 0 }}>
                   <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.1)" />
@@ -161,9 +161,9 @@ export default function OverviewPage() {
           </div>
         </div>
 
-        <div className="rounded-xl bg-white/5 border border-white/10 p-4">
+        <div className="rounded-xl bg-white/5 border border-white/10 p-4 overflow-hidden">
           <h2 className="text-sm font-semibold text-white mb-4">Top 10 Cihaz Modeli</h2>
-          <div className="overflow-x-auto">
+          <div className="overflow-x-auto -mx-2 px-2 touch-pan-x">
             <table className="w-full text-sm">
               <thead>
                 <tr className="text-white/60 border-b border-white/10">

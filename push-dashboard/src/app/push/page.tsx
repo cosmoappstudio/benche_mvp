@@ -115,13 +115,13 @@ export default function PushPage() {
 
   return (
     <DashboardLayout>
-      <div className="max-w-xl space-y-6">
+      <div className="max-w-xl space-y-4 sm:space-y-6">
         <header>
-          <h1 className="text-2xl font-bold text-white">Push Notifications</h1>
-          <p className="text-white/60 mt-1">Segment seçerek veya tümüne bildirim gönder</p>
+          <h1 className="text-xl sm:text-2xl font-bold text-white">Push Notifications</h1>
+          <p className="text-white/60 mt-1 text-sm sm:text-base">Segment seçerek veya tümüne bildirim gönder</p>
         </header>
 
-        <div className="flex gap-4">
+        <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
           {subscribers !== null && (
             <div className="rounded-xl bg-white/5 border border-white/10 p-4 flex-1">
               <p className="text-white/60 text-sm">Toplam push abonesi</p>
@@ -189,7 +189,7 @@ export default function PushPage() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full py-3 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 disabled:opacity-50 text-white font-semibold text-center"
+            className="w-full py-3 min-h-[44px] rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 disabled:opacity-50 text-white font-semibold text-center touch-manipulation active:scale-[0.98]"
           >
             {loading ? "Gönderiliyor..." : "Gönder"}
           </button>

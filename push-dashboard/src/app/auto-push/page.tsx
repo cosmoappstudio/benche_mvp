@@ -89,11 +89,11 @@ export default function AutoPushPage() {
     const update = (key: string, val: number) =>
       setEditForm((f) => ({ ...f, rules: { ...(f.rules ?? {}), [key]: val } }));
 
-    switch (triggerType) {
+        switch (triggerType) {
       case "daily_morning":
       case "weekend":
         return (
-          <div className="grid grid-cols-2 gap-2 text-sm">
+          <div className="grid grid-cols-2 sm:grid-cols-2 gap-2 text-sm">
             <div>
               <label className="text-white/60">Saat</label>
               <input
@@ -201,15 +201,15 @@ export default function AutoPushPage() {
 
   return (
     <DashboardLayout>
-      <div className="space-y-6">
+      <div className="space-y-4 sm:space-y-6">
         <header>
-          <h1 className="text-2xl font-bold text-white">Otomatik Push</h1>
-          <p className="text-white/60 mt-1">
+          <h1 className="text-xl sm:text-2xl font-bold text-white">Otomatik Push</h1>
+          <p className="text-white/60 mt-1 text-sm sm:text-base">
             Tetikleyicileri düzenle — metin ve kurallar dashboard&apos;dan değiştirilebilir
           </p>
         </header>
 
-        <div className="rounded-xl bg-white/5 border border-white/10 p-4 text-sm text-white/60">
+        <div className="rounded-xl bg-white/5 border border-white/10 p-3 sm:p-4 text-sm text-white/60 overflow-x-auto">
           <p>
             Cron: <code className="bg-white/10 px-1 rounded">GET /api/cron/auto-push</code> her 15
             dakikada çağrılmalı. Vercel Cron veya harici servis ile ayarlayın.
@@ -289,13 +289,13 @@ export default function AutoPushPage() {
                   <div className="flex gap-2">
                     <button
                       onClick={handleSave}
-                      className="px-4 py-2 rounded-lg bg-purple-600 hover:bg-purple-500 text-white text-sm font-medium"
+                      className="flex-1 min-h-[44px] px-4 py-2 rounded-lg bg-purple-600 hover:bg-purple-500 text-white text-sm font-medium touch-manipulation"
                     >
                       Kaydet
                     </button>
                     <button
                       onClick={() => setEditing(null)}
-                      className="px-4 py-2 rounded-lg bg-white/10 hover:bg-white/20 text-white text-sm"
+                      className="flex-1 min-h-[44px] px-4 py-2 rounded-lg bg-white/10 hover:bg-white/20 text-white text-sm touch-manipulation"
                     >
                       İptal
                     </button>
