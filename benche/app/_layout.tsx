@@ -7,6 +7,7 @@ import { Outfit_700Bold } from "@expo-google-fonts/outfit";
 import { Inter_400Regular, Inter_500Medium } from "@expo-google-fonts/inter";
 import { View, Text, ActivityIndicator, Pressable } from "react-native";
 import { useUserStore } from "@/stores/userStore";
+import { useFeedbackStore } from "@/stores/feedbackStore";
 import { TRANSLATIONS } from "@/constants/translations";
 import { colors } from "@/constants/colors";
 
@@ -20,18 +21,8 @@ export default function RootLayout() {
     "Inter-Medium": Inter_500Medium,
   });
 
-  const { setSupabaseUserId, setIsPro, setOnboardingComplete, setInterests, resetStore, language } = useUserStore();
+  const { setSupabaseUserId, setIsPro, resetStore, language } = useUserStore();
   const t = TRANSLATIONS[language ?? "tr"] ?? TRANSLATIONS.en;
-
-  useEffect(() => {
-    if (__DEV__) {
-      const t = setTimeout(() => {
-        setOnboardingComplete(false);
-        setInterests([]);
-      }, 150);
-      return () => clearTimeout(t);
-    }
-  }, [setOnboardingComplete, setInterests]);
 
   const runBootstrap = async () => {
     try {
@@ -82,6 +73,10 @@ export default function RootLayout() {
       await initRevenueCat(userId);
       const proInfo = await getProInfo();
       useUserStore.getState().setIsPro(proInfo.isPro);
+
+      const { getFeedbackForUser } = await import("@/lib/db");
+      const { liked, disliked } = await getFeedbackForUser(userId);
+      useFeedbackStore.getState().hydrateFromDb(liked, disliked);
 
       const { getInitialUtm } = await import("@/lib/utm");
       const { syncProfileProUtm } = await import("@/lib/db");

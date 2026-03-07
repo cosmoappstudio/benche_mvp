@@ -1,6 +1,8 @@
 import { View, Text, Pressable } from "react-native";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useRouter } from "expo-router";
 import { LinearGradient } from "expo-linear-gradient";
+import { ONBOARDING_KEY } from "@/lib/auth";
 import { requestNotificationPermission } from "@/lib/permissions";
 import { useUserStore } from "@/stores/userStore";
 import { track, identify } from "@/lib/analytics";
@@ -38,6 +40,7 @@ export default function NotificationScreen() {
     });
     trackCompleteRegistration();
     await presentPaywallForPlacement(PLACEMENT.ONBOARDING);
+    await AsyncStorage.setItem(ONBOARDING_KEY, "true");
     setOnboardingComplete(true);
     router.replace("/(tabs)");
   };

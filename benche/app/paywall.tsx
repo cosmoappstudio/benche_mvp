@@ -3,6 +3,7 @@ import { View, Text, Pressable } from "react-native";
 import { useRouter } from "expo-router";
 import { useUserStore } from "@/stores/userStore";
 import { track } from "@/lib/analytics";
+import { presentPaywallForPlacement, PLACEMENT } from "@/lib/paywall";
 import { Icon } from "@/components/ui/Icon";
 import { TRANSLATIONS } from "@/constants/translations";
 import { colors } from "@/constants/colors";
@@ -52,9 +53,12 @@ export default function PaywallScreen() {
         </View>
 
         <Pressable
-          onPress={() => {
+          onPress={async () => {
             track("paywall_cta_clicked");
-            router.back();
+            const purchased = await presentPaywallForPlacement(PLACEMENT.PROFILE, {
+              skipFallback: true,
+            });
+            if (purchased) router.back();
           }}
           className="rounded-2xl py-4 mb-3"
           style={{ backgroundColor: colors.gradPrimary[0] }}

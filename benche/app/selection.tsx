@@ -71,7 +71,12 @@ export default function SelectionScreen() {
     day: "numeric",
   });
 
-  const cardSize = Math.min(160, (width - 48 - 32) / 2);
+  const screenPadding = 24 * 2;
+  const gap = 16;
+  const cardSize = Math.min(
+    130,
+    Math.floor((width - screenPadding - gap) / 2)
+  );
 
   return (
     <View className="flex-1" style={{ backgroundColor: colors.bg }}>
@@ -81,16 +86,19 @@ export default function SelectionScreen() {
       >
         {/* Sticky Header - Combo View */}
         <View
-          className="px-6 pb-2 border-b"
+          className="pb-2 border-b overflow-hidden"
           style={{
             backgroundColor: colors.bg,
             borderBottomColor: "rgba(255,255,255,0.05)",
             paddingTop: insets.top + 8,
+            paddingHorizontal: 24,
           }}
         >
           <View className="flex-row justify-between items-center mb-2">
-            <Text className="text-xl font-bold text-white">{t.title}</Text>
-            <View className="flex-row items-center gap-4">
+            <Text className="text-xl font-bold text-white flex-1" numberOfLines={1}>
+              {t.title}
+            </Text>
+            <View className="flex-row items-center gap-3 flex-shrink-0">
               <Text className="text-xs text-white/60 font-mono">{dateStr}</Text>
               <Pressable
                 onPress={() => router.back()}
@@ -102,15 +110,21 @@ export default function SelectionScreen() {
             </View>
           </View>
 
-          {/* Combo Line - 5 steps */}
-          <View className="flex-row justify-between items-center h-12">
+          {/* Combo Line - 5 steps - evenly spaced within bounds */}
+          <View
+            className="flex-row items-center h-12"
+            style={{
+              marginHorizontal: -4,
+              justifyContent: "space-between",
+            }}
+          >
             <View
-              className="absolute left-4 right-4 h-0.5"
+              className="absolute h-0.5 left-0 right-0"
               style={{ backgroundColor: "rgba(255,255,255,0.1)", top: 24 }}
             />
             {/* Color */}
             <View
-              className="w-8 h-8 rounded-full border-2 items-center justify-center"
+              className="w-8 h-8 rounded-full border-2 items-center justify-center z-10"
               style={{
                 backgroundColor: colors.bg,
                 borderColor: color || "rgba(255,255,255,0.1)",
@@ -125,7 +139,7 @@ export default function SelectionScreen() {
             </View>
             {/* Symbol */}
             <View
-              className="w-8 h-8 rounded-full border-2 items-center justify-center"
+              className="w-8 h-8 rounded-full border-2 items-center justify-center z-10"
               style={{
                 backgroundColor: colors.bg,
                 borderColor: symbol ? "#fff" : "rgba(255,255,255,0.1)",
@@ -141,7 +155,7 @@ export default function SelectionScreen() {
             </View>
             {/* Element */}
             <View
-              className="w-8 h-8 rounded-full border-2 items-center justify-center"
+              className="w-8 h-8 rounded-full border-2 items-center justify-center z-10"
               style={{
                 backgroundColor: colors.bg,
                 borderColor: element ? "#fff" : "rgba(255,255,255,0.1)",
@@ -155,7 +169,7 @@ export default function SelectionScreen() {
             </View>
             {/* Letter */}
             <View
-              className="w-8 h-8 rounded-full border-2 items-center justify-center"
+              className="w-8 h-8 rounded-full border-2 items-center justify-center z-10"
               style={{
                 backgroundColor: colors.bg,
                 borderColor: letter ? "#fff" : "rgba(255,255,255,0.1)",
@@ -165,7 +179,7 @@ export default function SelectionScreen() {
             </View>
             {/* Number */}
             <View
-              className="w-8 h-8 rounded-full border-2 items-center justify-center"
+              className="w-8 h-8 rounded-full border-2 items-center justify-center z-10"
               style={{
                 backgroundColor: colors.bg,
                 borderColor: number ? "#fff" : "rgba(255,255,255,0.1)",
@@ -182,8 +196,8 @@ export default function SelectionScreen() {
           showsVerticalScrollIndicator={false}
         >
           {/* SECTION 1: COLOR - Paint Drops */}
-          <View className="mb-12">
-            <View className="flex-row items-center gap-2 mb-4">
+          <View className="mb-12 overflow-hidden" style={{ marginHorizontal: -24 }}>
+            <View className="flex-row items-center gap-2 mb-4 px-6">
               <View
                 className="w-1 h-4 rounded-full"
                 style={{
@@ -199,7 +213,8 @@ export default function SelectionScreen() {
               showsHorizontalScrollIndicator={false}
               contentContainerStyle={{
                 paddingBottom: 32,
-                paddingHorizontal: 8,
+                paddingLeft: 28,
+                paddingRight: 28,
                 alignItems: "flex-end",
                 height: 128,
               }}
@@ -221,9 +236,9 @@ export default function SelectionScreen() {
             )}
           </View>
 
-          {/* SECTION 2: SYMBOL - 160x160 cards */}
-          <View className="mb-12">
-            <View className="flex-row items-center gap-2 mb-4">
+          {/* SECTION 2: SYMBOL - cards */}
+          <View className="mb-12 overflow-hidden" style={{ marginHorizontal: -24 }}>
+            <View className="flex-row items-center gap-2 mb-4 px-6">
               <View
                 className="w-1 h-4 rounded-full"
                 style={{ backgroundColor: "#FF8C00" }}
@@ -235,7 +250,11 @@ export default function SelectionScreen() {
             <ScrollView
               horizontal
               showsHorizontalScrollIndicator={false}
-              contentContainerStyle={{ gap: 16, paddingRight: 24 }}
+              contentContainerStyle={{
+                gap: 16,
+                paddingLeft: 28,
+                paddingRight: 28,
+              }}
             >
               {SYMBOLS.map((s) => {
                 const isSelected = symbol === s.id;
@@ -249,6 +268,7 @@ export default function SelectionScreen() {
                       borderRadius: 24,
                       alignItems: "center",
                       justifyContent: "center",
+                      overflow: "hidden",
                       borderWidth: isSelected ? 2 : 1,
                       borderColor: isSelected
                         ? "rgba(255,255,255,0.4)"
@@ -257,13 +277,12 @@ export default function SelectionScreen() {
                         ? "rgba(255,255,255,0.2)"
                         : "rgba(255,255,255,0.05)",
                       opacity: isSelected ? 1 : 0.6,
-                      transform: [{ scale: isSelected ? 1.05 : 0.95 }],
                       ...(isSelected && {
                         shadowColor: "#fff",
                         shadowOffset: { width: 0, height: 0 },
                         shadowOpacity: 0.3,
-                        shadowRadius: 12,
-                        elevation: 8,
+                        shadowRadius: 8,
+                        elevation: 6,
                       }),
                     }}
                   >
@@ -297,9 +316,9 @@ export default function SelectionScreen() {
             </ScrollView>
           </View>
 
-          {/* SECTION 3: ELEMENT - 160x160 cards */}
-          <View className="mb-12">
-            <View className="flex-row items-center gap-2 mb-4">
+          {/* SECTION 3: ELEMENT - cards */}
+          <View className="mb-12 overflow-hidden" style={{ marginHorizontal: -24 }}>
+            <View className="flex-row items-center gap-2 mb-4 px-6">
               <View
                 className="w-1 h-4 rounded-full"
                 style={{ backgroundColor: "#00C851" }}
@@ -311,7 +330,11 @@ export default function SelectionScreen() {
             <ScrollView
               horizontal
               showsHorizontalScrollIndicator={false}
-              contentContainerStyle={{ gap: 16, paddingRight: 24 }}
+              contentContainerStyle={{
+                gap: 16,
+                paddingLeft: 28,
+                paddingRight: 28,
+              }}
             >
               {ELEMENTS.map((e) => {
                 const isSelected = element === e.id;
@@ -325,6 +348,7 @@ export default function SelectionScreen() {
                       borderRadius: 24,
                       alignItems: "center",
                       justifyContent: "center",
+                      overflow: "hidden",
                       borderWidth: isSelected ? 2 : 1,
                       borderColor: isSelected
                         ? "rgba(255,255,255,0.4)"
@@ -333,13 +357,12 @@ export default function SelectionScreen() {
                         ? "rgba(255,255,255,0.2)"
                         : "rgba(255,255,255,0.05)",
                       opacity: isSelected ? 1 : 0.6,
-                      transform: [{ scale: isSelected ? 1.05 : 0.95 }],
                       ...(isSelected && {
                         shadowColor: "#fff",
                         shadowOffset: { width: 0, height: 0 },
                         shadowOpacity: 0.3,
-                        shadowRadius: 12,
-                        elevation: 8,
+                        shadowRadius: 8,
+                        elevation: 6,
                       }),
                     }}
                   >
@@ -371,7 +394,7 @@ export default function SelectionScreen() {
 
           {/* SECTION 4: LETTER - Card input */}
           <View className="mb-12 items-center">
-            <View className="flex-row items-center gap-2 mb-8">
+            <View className="flex-row items-center gap-2 mb-8 self-start px-6">
               <View
                 className="w-1 h-4 rounded-full"
                 style={{ backgroundColor: "#FF6B9D" }}
@@ -381,8 +404,9 @@ export default function SelectionScreen() {
               </Text>
             </View>
             <View
-              className="w-40 h-56 rounded-3xl items-center justify-center"
+              className="min-h-[200px] rounded-3xl items-center justify-center py-6"
               style={{
+                width: Math.min(160, width - 48),
                 borderWidth: 1,
                 borderColor: letter
                   ? "rgba(255,255,255,0.4)"
@@ -392,14 +416,7 @@ export default function SelectionScreen() {
                   : "rgba(255,255,255,0.05)",
               }}
             >
-              <View
-                className="absolute inset-0 rounded-3xl overflow-hidden"
-                style={{
-                  backgroundColor: "transparent",
-                  // gradient overlay bottom
-                }}
-              />
-              <Text className="text-xs text-white/40 uppercase tracking-widest mb-4">
+              <Text className="text-xs text-white/40 uppercase tracking-widest mb-3">
                 {t.initial}
               </Text>
               <TextInput
@@ -410,12 +427,17 @@ export default function SelectionScreen() {
                 placeholder="?"
                 placeholderTextColor="rgba(255,255,255,0.3)"
                 className="text-8xl font-bold text-white text-center w-24"
+                style={{
+                  lineHeight: 96,
+                  paddingVertical: 0,
+                  ...(Platform.OS === "android" && { includeFontPadding: false }),
+                }}
                 maxLength={1}
                 autoCapitalize="characters"
               />
               {letter && (
                 <View
-                  className="absolute bottom-4 w-12 h-1 rounded-full"
+                  className="mt-2 w-12 h-1 rounded-full"
                   style={{ backgroundColor: "rgba(255,255,255,0.5)" }}
                 />
               )}
@@ -423,7 +445,7 @@ export default function SelectionScreen() {
           </View>
 
           {/* SECTION 5: NUMBER */}
-          <View className="mb-8 items-center">
+          <View className="mb-8 items-center overflow-hidden">
             <View className="flex-row items-center gap-2 mb-8">
               <View
                 className="w-1 h-4 rounded-full"
@@ -440,7 +462,7 @@ export default function SelectionScreen() {
                   onPress={() =>
                     setNumber(number === n.value ? null : n.value)
                   }
-                  className="w-12 h-12 rounded-full items-center justify-center"
+                  className="w-12 h-12 rounded-full items-center justify-center overflow-hidden"
                   style={{
                     backgroundColor:
                       number === n.value ? "#fff" : "rgba(255,255,255,0.1)",
@@ -448,8 +470,8 @@ export default function SelectionScreen() {
                       shadowColor: "#fff",
                       shadowOffset: { width: 0, height: 0 },
                       shadowOpacity: 0.5,
-                      shadowRadius: 15,
-                      elevation: 8,
+                      shadowRadius: 8,
+                      elevation: 6,
                     }),
                   }}
                 >
@@ -469,8 +491,11 @@ export default function SelectionScreen() {
 
         {/* FAB - Floating Action Button */}
         <View
-          className="absolute bottom-0 left-0 right-0 p-6 pt-4"
-          style={{ backgroundColor: colors.bg }}
+          className="absolute bottom-0 left-0 right-0 px-6 pt-4"
+          style={{
+            backgroundColor: colors.bg,
+            paddingBottom: Math.max(insets.bottom, 20) + 20,
+          }}
         >
           <Pressable
             onPress={handleComplete}

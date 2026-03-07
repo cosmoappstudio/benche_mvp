@@ -173,6 +173,37 @@ export async function updateDailyCardRecommendations(
   }
 }
 
+/** Kullanıcının tüm feedback'ini getir — profil ve zevk haritası için store'u hydrate etmek üzere */
+export async function getFeedbackForUser(userId: string): Promise<{
+  liked: string[];
+  disliked: string[];
+}> {
+  const { data, error } = await supabase
+    .from("feedback")
+    .select("category, recommendation, liked")
+    .eq("user_id", userId)
+    .order("created_at", { ascending: false });
+
+  if (error || !data) return { liked: [], disliked: [] };
+
+  const seen = new Set<string>();
+  const liked: string[] = [];
+  const disliked: string[] = [];
+
+  for (const row of data) {
+    const key = `${row.category}:${row.recommendation}`;
+    if (seen.has(key)) continue;
+    seen.add(key);
+    if (row.liked) {
+      liked.push(key);
+    } else {
+      disliked.push(key);
+    }
+  }
+
+  return { liked, disliked };
+}
+
 export async function upsertFeedback(params: {
   userId: string;
   cardId: string;

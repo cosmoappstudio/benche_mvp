@@ -1,5 +1,6 @@
 import Purchases from "react-native-purchases";
 import RevenueCatUI, { PAYWALL_RESULT } from "react-native-purchases-ui";
+import { router } from "expo-router";
 import { getProInfo } from "./revenuecat";
 import { useUserStore } from "@/stores/userStore";
 import { trackSubscribe } from "./adsTracking";
@@ -13,22 +14,39 @@ export const PLACEMENT = {
 
 export type PaywallPlacement = (typeof PLACEMENT)[keyof typeof PLACEMENT];
 
-/** Placement'a göre paywall göster. PRO değilse gösterir. */
+export interface PresentPaywallOptions {
+  /** true ise RevenueCat başarısız olunca fallback paywall'a yönlendirilmez (zaten fallback'tayken kullan) */
+  skipFallback?: boolean;
+}
+
+/** Placement'a göre paywall göster. PRO değilse gösterir. RevenueCat başarısız olursa custom paywall'a yönlendirir. */
 export async function presentPaywallForPlacement(
-  placementId: PaywallPlacement
+  placementId: PaywallPlacement,
+  options?: PresentPaywallOptions
 ): Promise<boolean> {
   try {
     const proInfo = await getProInfo();
     if (proInfo.isPro) return true;
 
-    let offering = await Purchases.getCurrentOfferingForPlacement(placementId);
+    let offering = null;
+    try {
+      offering = await Purchases.getCurrentOfferingForPlacement(placementId);
+      if (!offering) {
+        const { current, all } = await Purchases.getOfferings();
+        offering = all["default"] ?? current;
+      }
+    } catch (e) {
+      if (__DEV__) console.warn("[paywall] Offering fetch failed:", e);
+    }
+
+    // Offering yoksa veya config hatası (Error 23) riski varsa doğrudan fallback
     if (!offering) {
-      const { current } = await Purchases.getOfferings();
-      offering = current;
+      if (!options?.skipFallback) router.push("/paywall");
+      return false;
     }
 
     const result = await RevenueCatUI.presentPaywall({
-      offering: offering ?? undefined,
+      offering,
       displayCloseButton: true,
     });
 
@@ -39,7 +57,11 @@ export async function presentPaywallForPlacement(
       return true;
     }
     return false;
-  } catch {
+  } catch (err) {
+    if (__DEV__) console.warn("[paywall] RevenueCat UI failed, showing fallback:", err);
+    if (!options?.skipFallback) {
+      router.push("/paywall");
+    }
     return false;
   }
 }

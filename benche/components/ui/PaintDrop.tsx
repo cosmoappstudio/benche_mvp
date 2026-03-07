@@ -19,8 +19,8 @@ export function PaintDrop({ color, label, isSelected, onPress }: PaintDropProps)
   const translateY = useSharedValue(0);
 
   React.useEffect(() => {
-    scale.value = withSpring(isSelected ? 1.2 : 1);
-    translateY.value = withSpring(isSelected ? -10 : 0);
+    scale.value = withSpring(isSelected ? 1.08 : 1);
+    translateY.value = withSpring(isSelected ? -6 : 0);
   }, [isSelected]);
 
   const animatedStyle = useAnimatedStyle(() => ({
@@ -36,9 +36,9 @@ export function PaintDrop({ color, label, isSelected, onPress }: PaintDropProps)
           isSelected && {
             shadowColor: color,
             shadowOffset: { width: 0, height: 0 },
-            shadowOpacity: 0.8,
-            shadowRadius: 10,
-            elevation: 8,
+            shadowOpacity: 0.6,
+            shadowRadius: 8,
+            elevation: 6,
           },
         ]}
       >

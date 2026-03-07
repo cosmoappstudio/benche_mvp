@@ -5,12 +5,14 @@ interface FeedbackStore {
   disliked: string[];
   addFeedback: (category: string, recommendation: string, liked: boolean) => void;
   removeFeedback: (key: string) => void;
+  hydrateFromDb: (liked: string[], disliked: string[]) => void;
   reset: () => void;
 }
 
 export const useFeedbackStore = create<FeedbackStore>((set) => ({
   liked: [],
   disliked: [],
+  hydrateFromDb: (liked, disliked) => set({ liked, disliked }),
   addFeedback: (category, recommendation, liked) =>
     set((state) => {
       const key = `${category}:${recommendation}`;

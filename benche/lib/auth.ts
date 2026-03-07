@@ -1,15 +1,23 @@
 import { supabase } from "./supabase";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import type { Session } from "@supabase/supabase-js";
+import { useFeedbackStore } from "@/stores/feedbackStore";
+import { useSelectionStore } from "@/stores/selectionStore";
+import { useUserStore } from "@/stores/userStore";
 
 const SESSION_KEY = "benche_session";
 export const USER_STORE_KEY = "benche-user";
+export const ONBOARDING_KEY = "onboardingCompleted";
 
 /** Geçersiz session sonrası tüm veriyi temizle (profile silindiğinde) */
 export const clearSessionAndStore = async (): Promise<void> => {
   await AsyncStorage.removeItem(SESSION_KEY);
   await AsyncStorage.removeItem(USER_STORE_KEY);
+  await AsyncStorage.removeItem(ONBOARDING_KEY);
   await supabase.auth.signOut();
+  useUserStore.getState().resetStore();
+  useFeedbackStore.getState().reset();
+  useSelectionStore.getState().reset();
 };
 
 export const initAnonymousSession = async (): Promise<Session | null> => {

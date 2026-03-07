@@ -1,6 +1,5 @@
-const buildNumber = process.env.EAS_BUILD_NUMBER
-  ? String(process.env.EAS_BUILD_NUMBER)
-  : "1";
+// Sabit build number — her build öncesi güncelle (Dashboard env override ediyorsa bu kullanılır)
+const buildNumber = "14";
 
 const appJson = {
   expo: {
@@ -19,7 +18,10 @@ const appJson = {
     ios: {
       supportsTablet: false,
       bundleIdentifier: "com.mavkaistudio.benche",
-      buildNumber: "8",
+      buildNumber: "14",
+      config: {
+        usesNonExemptEncryption: false,
+      },
       infoPlist: {
         NSLocationWhenInUseUsageDescription:
           "Bulunduğun şehre göre kişisel öneriler sunmak için konumuna ihtiyacımız var.",
@@ -55,6 +57,20 @@ const appJson = {
         {
           icon: "./assets/notification-icon.png",
           color: "#7B2FFF",
+        },
+      ],
+      [
+        "react-native-fbsdk-next",
+        {
+          appID: process.env.EXPO_PUBLIC_META_APP_ID || "1260540909343746",
+          clientToken: process.env.EXPO_PUBLIC_META_CLIENT_TOKEN || "326fbc892972047541a1007883655ca7",
+          displayName: "benche",
+          scheme: `fb${process.env.EXPO_PUBLIC_META_APP_ID || "1260540909343746"}`,
+          advertiserIDCollectionEnabled: true,
+          autoLogAppEventsEnabled: true,
+          isAutoInitEnabled: true,
+          iosUserTrackingPermission:
+            "Bu tanımlayıcı, size kişiselleştirilmiş reklamlar sunmak için kullanılacaktır.",
         },
       ],
     ],

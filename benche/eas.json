@@ -7,12 +7,22 @@
     "development": {
       "developmentClient": true,
       "distribution": "internal",
+      "cache": { "disabled": true },
       "ios": {
         "simulator": false
       }
     },
+    "development-simulator": {
+      "developmentClient": true,
+      "distribution": "internal",
+      "cache": { "disabled": true },
+      "ios": {
+        "simulator": true
+      }
+    },
     "preview": {
       "distribution": "internal",
+      "cache": { "disabled": true },
       "ios": {
         "simulator": false
       },
@@ -24,8 +34,9 @@
     "production": {
       "distribution": "store",
       "channel": "production",
+      "cache": { "disabled": true },
       "env": {
-        "EAS_BUILD_NUMBER": "9"
+        "EAS_BUILD_NUMBER": "11"
       },
       "ios": {
         "resourceClass": "m-medium"

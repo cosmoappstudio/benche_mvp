@@ -1,0 +1,10 @@
+@import "tailwindcss";
+
+@theme {
+  --font-outfit: "Outfit", system-ui, sans-serif;
+  --color-benche-bg: #0a0a1a;
+  --color-benche-purple: #7b2fff;
+  --color-benche-cyan: #00d4ff;
+  --color-benche-text: #ffffff;
+  --color-benche-muted: #a0a0c0;
+}
