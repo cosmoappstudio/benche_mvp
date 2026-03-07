@@ -1,6 +1,6 @@
 # Benche Admin Dashboard
 
-Analytics raporları + Push notification yönetim paneli. Otomatik push + segmentler.
+Analytics raporları + Push notification yönetim paneli. Otomatik push + segmentler. v2
 
 ## Özellikler
 
