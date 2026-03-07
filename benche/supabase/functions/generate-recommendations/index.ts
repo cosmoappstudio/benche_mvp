@@ -10,6 +10,7 @@ const corsHeaders = {
 
 interface GenerateRequest {
   userId?: string;
+  isPro?: boolean;
   color: string | null;
   symbol: string | null;
   element: string | null;
@@ -224,6 +225,7 @@ Deno.serve(async (req) => {
     const body = (await req.json()) as GenerateRequest;
     const {
       userId,
+      isPro = true,
       color,
       symbol,
       element,
@@ -273,11 +275,12 @@ Deno.serve(async (req) => {
 
     const season = getSeason();
 
-    const [model, promptTemplate, maxRecs] = await Promise.all([
+    const [model, promptTemplate, maxRecsConfig] = await Promise.all([
       getConfig<string>(supabase, "replicate_model", "meta/meta-llama-3-70b-instruct"),
       getConfig<string>(supabase, "prompt_template", ""),
       getConfig<number>(supabase, "max_recommendations", 6),
     ]);
+    const maxRecs = isPro ? maxRecsConfig : 2;
 
     const promptVars: Record<string, string> = {
       language,
@@ -297,10 +300,32 @@ Deno.serve(async (req) => {
       disliked: disliked.join(", ") || "none",
     };
 
-    const prompt = promptTemplate
-      ? applyPromptTemplate(promptTemplate, promptVars)
-      : applyPromptTemplate(
-          `Act as Benche, a cool daily lifestyle guide. Generate exactly 6 personalized recommendations in JSON format.
+    const freeUserPrompt = `Act as Benche, a cool daily lifestyle guide. Generate exactly 2 personalized recommendations in JSON format. FREE USER: ONLY Yemek (Food) and Kitap (Book) categories.
+
+CRITICAL - DESCRIPTION: Each "description" MUST be SPECIFIC to that item. Describe the dish or book theme. NEVER use generic phrases.
+
+User context:
+- Language: {{language}}
+- Location: {{city}}, {{country}} ({{countryCode}})
+- Weather: {{weather}}, {{weatherTemp}}°C
+- Season: {{season}}
+- Interests (prioritize these): {{interests}}
+- Selections: color={{color}}, symbol={{symbol}}, element={{element}}, letter={{letter}}, number={{number}}
+- Liked (avoid similar): {{liked}}
+- Disliked (never suggest): {{disliked}}
+
+Rules:
+- Yemek: describe the dish, omit link
+- Kitap: describe the book, omit link
+
+CRITICAL - LANGUAGE: Write ALL output ONLY in {{language}}.
+CRITICAL - OUTPUT: Return ONLY a raw JSON array. No markdown. Start with [ and end with ].
+[
+  {"category":"Yemek","title":"...","description":"...","reason":"..."},
+  {"category":"Kitap","title":"...","description":"...","reason":"..."}
+]`;
+
+    const proUserPrompt = `Act as Benche, a cool daily lifestyle guide. Generate exactly 6 personalized recommendations in JSON format.
 
 CRITICAL - DESCRIPTION: Each "description" MUST be SPECIFIC to that item. Describe the content (film plot, playlist vibe, book theme). NEVER use generic phrases like "a good choice for a day in {{city}}" for Film, Series, Playlist, Book, Food. ONLY Activity may mention location.
 
@@ -332,9 +357,12 @@ CRITICAL - OUTPUT: Return ONLY a raw JSON array. No markdown. Start with [ and e
   {"category":"Series","title":"...","description":"...","reason":"...","platform":"Amazon Prime"},
   {"category":"Kitap","title":"...","description":"...","reason":"..."},
   {"category":"Aktivite","title":"...","description":"...","reason":"...","link":"optional"}
-]`,
-          promptVars
-        );
+]`;
+
+    const defaultPrompt = isPro ? proUserPrompt : freeUserPrompt;
+    const prompt = promptTemplate
+      ? applyPromptTemplate(promptTemplate, promptVars)
+      : applyPromptTemplate(defaultPrompt, promptVars);
 
     const replicateToken =
       Deno.env.get("REPLICATE_API_TOKEN")?.trim() ||

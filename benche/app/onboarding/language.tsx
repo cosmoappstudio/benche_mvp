@@ -4,6 +4,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { LANGUAGES } from "@/constants/languages";
 import { TRANSLATIONS } from "@/constants/translations";
 import { useUserStore } from "@/stores/userStore";
+import { track } from "@/lib/analytics";
 import { colors } from "@/constants/colors";
 import type { Language } from "@/stores/userStore";
 
@@ -18,6 +19,7 @@ export default function LanguageScreen() {
   };
 
   const handleContinue = () => {
+    track("onboarding_language_selected", { language: language ?? "en" });
     router.push("/onboarding/interests");
   };
 

@@ -29,6 +29,8 @@ import {
 import { requestNotificationPermission } from "@/lib/permissions";
 import { getLegalUrls } from "@/lib/appConfig";
 import { getVibeForCard } from "@/lib/i18n";
+import { track } from "@/lib/analytics";
+import { presentPaywallForPlacement, PLACEMENT } from "@/lib/paywall";
 import { Icon } from "@/components/ui/Icon";
 import { colors } from "@/constants/colors";
 import { TRANSLATIONS } from "@/constants/translations";
@@ -76,7 +78,6 @@ export default function ProfileScreen() {
     notificationsEnabled,
     setLanguage,
     setNotificationsEnabled,
-    setOnboardingComplete,
     totalPlansCreated,
     lastColor,
     lastSymbol,
@@ -272,7 +273,10 @@ export default function ProfileScreen() {
                 </View>
               ) : (
                 <Pressable
-                  onPress={() => router.push("/paywall")}
+                  onPress={async () => {
+                    track("paywall_opened", { source: "profile" });
+                    await presentPaywallForPlacement(PLACEMENT.PROFILE);
+                  }}
                   className="rounded-xl overflow-hidden min-h-[44px]"
                   style={({ pressed }) => ({ opacity: pressed ? 0.9 : 1 })}
                 >
@@ -528,23 +532,6 @@ export default function ProfileScreen() {
             thumbColor="#fff"
           />
         </View>
-
-        <Pressable
-          onPress={() => {
-            setOnboardingComplete(false);
-            router.replace("/");
-          }}
-          className="flex-row items-center justify-between py-4 px-4 border-b"
-          style={{ borderColor: "rgba(255,255,255,0.08)" }}
-        >
-          <View className="flex-row items-center gap-3">
-            <Icon name="RotateCcw" size={20} color="#A0A0C0" />
-            <Text className="text-white font-medium">
-              {(t.settings as { resetOnboarding?: string }).resetOnboarding ?? "Reset Onboarding"}
-            </Text>
-          </View>
-          <Icon name="ChevronRight" size={18} color="rgba(255,255,255,0.4)" />
-        </Pressable>
 
         <Pressable
           className="flex-row items-center justify-between py-4 px-4 border-b"

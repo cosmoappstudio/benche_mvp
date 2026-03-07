@@ -12,6 +12,7 @@ export interface Recommendation {
 
 export interface GenerateRecommendationsInput {
   userId?: string;
+  isPro?: boolean;
   color: string | null;
   symbol: string | null;
   element: string | null;

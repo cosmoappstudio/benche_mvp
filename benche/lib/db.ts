@@ -18,6 +18,7 @@ export async function upsertProfile(params: {
   locationCity?: string;
   interests?: string[];
   expoPushToken?: string | null;
+  notificationEnabled?: boolean;
   deviceOs?: string;
   deviceModel?: string;
   totalPlansCreated?: number;
@@ -65,6 +66,9 @@ export async function upsertProfile(params: {
   if (params.referrer !== undefined) {
     row.referrer = params.referrer;
   }
+  if (params.notificationEnabled !== undefined) {
+    row.notification_enabled = params.notificationEnabled;
+  }
   const { error } = await supabase.from("profiles").upsert(row, {
     onConflict: "id",
   });
@@ -79,7 +83,10 @@ export async function updateProfilePushToken(
 ): Promise<void> {
   const { error } = await supabase
     .from("profiles")
-    .update({ expo_push_token: expoPushToken })
+    .update({
+      expo_push_token: expoPushToken,
+      notification_enabled: !!expoPushToken,
+    })
     .eq("id", userId);
   if (error) {
     console.warn("[db] updateProfilePushToken error:", error.message);
@@ -208,10 +215,15 @@ export interface DailyCardRow {
 export async function getDailyCards(userId: string): Promise<
   (DailyCardRow & { liked_count: number; disliked_count: number })[]
 > {
+  const sevenDaysAgo = new Date();
+  sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+  const cutoff = sevenDaysAgo.toISOString();
+
   const { data: cards, error } = await supabase
     .from("daily_cards")
     .select("id, selected_color, selected_symbol, selected_element, selected_letter, selected_number, created_at")
     .eq("user_id", userId)
+    .gte("created_at", cutoff)
     .order("created_at", { ascending: false })
     .limit(30);
 

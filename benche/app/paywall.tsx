@@ -1,6 +1,8 @@
+import { useEffect } from "react";
 import { View, Text, Pressable } from "react-native";
 import { useRouter } from "expo-router";
 import { useUserStore } from "@/stores/userStore";
+import { track } from "@/lib/analytics";
 import { Icon } from "@/components/ui/Icon";
 import { TRANSLATIONS } from "@/constants/translations";
 import { colors } from "@/constants/colors";
@@ -9,6 +11,10 @@ export default function PaywallScreen() {
   const router = useRouter();
   const language = useUserStore((s) => s.language);
   const t = TRANSLATIONS[language] ?? TRANSLATIONS.en;
+
+  useEffect(() => {
+    track("paywall_viewed");
+  }, []);
 
   const features = [t.paywall.feature1, t.paywall.feature2, t.paywall.feature3];
 
@@ -46,13 +52,22 @@ export default function PaywallScreen() {
         </View>
 
         <Pressable
-          onPress={() => router.back()}
+          onPress={() => {
+            track("paywall_cta_clicked");
+            router.back();
+          }}
           className="rounded-2xl py-4 mb-3"
           style={{ backgroundColor: colors.gradPrimary[0] }}
         >
           <Text className="text-center font-bold text-white">{t.paywall.cta}</Text>
         </Pressable>
-        <Pressable onPress={() => router.back()} className="py-4">
+        <Pressable
+          onPress={() => {
+            track("paywall_later_clicked");
+            router.back();
+          }}
+          className="py-4"
+        >
           <Text className="text-center text-white/50 text-sm">{t.paywall.later}</Text>
         </Pressable>
       </View>

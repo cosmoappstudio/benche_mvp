@@ -6,12 +6,6 @@ import { useFonts } from "expo-font";
 import { Outfit_700Bold } from "@expo-google-fonts/outfit";
 import { Inter_400Regular, Inter_500Medium } from "@expo-google-fonts/inter";
 import { View, Text, ActivityIndicator, Pressable } from "react-native";
-import { initAnonymousSession } from "@/lib/auth";
-import { initAnalytics } from "@/lib/analytics";
-import { initRevenueCat, getProInfo } from "@/lib/revenuecat";
-import { getInitialUtm } from "@/lib/utm";
-import { syncProfileProUtm } from "@/lib/db";
-import { initMeta } from "@/lib/meta";
 import { useUserStore } from "@/stores/userStore";
 import { TRANSLATIONS } from "@/constants/translations";
 import { colors } from "@/constants/colors";
@@ -26,60 +20,98 @@ export default function RootLayout() {
     "Inter-Medium": Inter_500Medium,
   });
 
-  const { setSupabaseUserId, setIsPro, setOnboardingComplete, language } = useUserStore();
+  const { setSupabaseUserId, setIsPro, setOnboardingComplete, setInterests, resetStore, language } = useUserStore();
   const t = TRANSLATIONS[language ?? "tr"] ?? TRANSLATIONS.en;
 
   useEffect(() => {
-    if (__DEV__) setOnboardingComplete(false);
-  }, [setOnboardingComplete]);
+    if (__DEV__) {
+      const t = setTimeout(() => {
+        setOnboardingComplete(false);
+        setInterests([]);
+      }, 150);
+      return () => clearTimeout(t);
+    }
+  }, [setOnboardingComplete, setInterests]);
 
   const runBootstrap = async () => {
     try {
+      const { initAnonymousSession, clearSessionAndStore } = await import("@/lib/auth");
       const session = await initAnonymousSession();
       const userId = session?.user?.id ?? null;
 
       if (userId) {
         setSupabaseUserId(userId);
-        try {
-          initAnalytics(userId);
-        } catch {
-          /* Analytics optional */
-        }
-        try {
-          await initRevenueCat(userId);
-          const proInfo = await getProInfo();
-          setIsPro(proInfo.isPro);
-
-          const utm = await getInitialUtm();
-          await syncProfileProUtm({
-            userId,
-            isPro: proInfo.isPro,
-            proProductId: proInfo.productId,
-            ...(utm && {
-              utmSource: utm.utmSource ?? null,
-              utmMedium: utm.utmMedium ?? null,
-              utmCampaign: utm.utmCampaign ?? null,
-              referrer: utm.referrer ?? null,
-            }),
-          });
-        } catch {
-          setIsPro(false);
-        }
+        setIsPro(false);
       }
 
-      initMeta();
       setError(null);
     } catch (err) {
       console.error("[bootstrap] error:", err);
-      setError(err instanceof Error ? err.message : "Başlatma hatası");
+      const msg = err instanceof Error ? err.message : "";
+      if (msg.includes("Refresh Token") || msg.includes("Invalid") || msg.includes("JWT")) {
+        try {
+          const { clearSessionAndStore } = await import("@/lib/auth");
+          await clearSessionAndStore();
+        } catch {
+          /* ignore */
+        }
+        resetStore();
+        setError(null);
+        return runBootstrap();
+      }
+      setError(msg || "Başlatma hatası");
     } finally {
       setIsReady(true);
     }
   };
 
+  // Faz 2: SDK'lar dynamic import ile — native modüller sadece UI gösterildikten sonra yüklenir
+  const runDeferredInit = async () => {
+    const userId = useUserStore.getState().supabaseUserId;
+    if (!userId) return;
+
+    try {
+      const { initAnalytics } = await import("@/lib/analytics");
+      await initAnalytics(userId);
+    } catch {
+      /* Analytics optional */
+    }
+
+    try {
+      const { initRevenueCat, getProInfo } = await import("@/lib/revenuecat");
+      await initRevenueCat(userId);
+      const proInfo = await getProInfo();
+      useUserStore.getState().setIsPro(proInfo.isPro);
+
+      const { getInitialUtm } = await import("@/lib/utm");
+      const { syncProfileProUtm } = await import("@/lib/db");
+      const utm = await getInitialUtm();
+      await syncProfileProUtm({
+        userId,
+        isPro: proInfo.isPro,
+        proProductId: proInfo.productId,
+        ...(utm && {
+          utmSource: utm.utmSource ?? null,
+          utmMedium: utm.utmMedium ?? null,
+          utmCampaign: utm.utmCampaign ?? null,
+          referrer: utm.referrer ?? null,
+        }),
+      });
+    } catch {
+      useUserStore.getState().setIsPro(false);
+    }
+
+  };
+
   useEffect(() => {
     runBootstrap();
   }, [setSupabaseUserId, setIsPro]);
+
+  useEffect(() => {
+    if (!isReady) return;
+    const t = setTimeout(() => runDeferredInit(), 500);
+    return () => clearTimeout(t);
+  }, [isReady]);
 
   // Redirect is handled by app/index.tsx based on onboardingComplete
 

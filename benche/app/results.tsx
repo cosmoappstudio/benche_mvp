@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { View, Text, Pressable, ScrollView, Linking, Share, Modal } from "react-native";
 import { useRouter } from "expo-router";
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
@@ -10,6 +10,8 @@ import { useFeedbackStore } from "@/stores/feedbackStore";
 import { useUserStore } from "@/stores/userStore";
 import { useRecommendationsStore } from "@/stores/recommendationsStore";
 import { upsertFeedback } from "@/lib/db";
+import { track } from "@/lib/analytics";
+import { trackViewContent } from "@/lib/adsTracking";
 import { GlassCard } from "@/components/ui/GlassCard";
 import { Button } from "@/components/ui/Button";
 import { Icon } from "@/components/ui/Icon";
@@ -55,18 +57,27 @@ export default function ResultsScreen() {
   ).length;
   const showProgress = feedbackCount < 5;
 
+  useEffect(() => {
+    if (recommendations.length > 0) {
+      track("results_viewed", { recommendations_count: recommendations.length });
+      trackViewContent("recommendations", `count_${recommendations.length}`);
+    }
+  }, [recommendations.length]);
+
   const symbolLabel = symbol ? getSelectionLabel("symbol", symbol, language) : "";
   const elementLabel = element ? getSelectionLabel("element", element, language) : "";
   const [shareModalVisible, setShareModalVisible] = useState(false);
   const storyRef = useRef<View>(null);
 
   const handleCreateNew = () => {
+    track("results_create_new_clicked");
     reset();
     resetRecommendations();
     router.replace("/selection");
   };
 
   const handleLike = (id: string, category: string, title: string) => {
+    track("feedback_liked", { category, title });
     addFeedback(category, title, true);
     if (supabaseUserId && cardId) {
       upsertFeedback({
@@ -80,6 +91,7 @@ export default function ResultsScreen() {
   };
 
   const handleShareStory = () => {
+    track("results_share_story_clicked");
     setShareModalVisible(true);
   };
 
@@ -93,6 +105,7 @@ export default function ResultsScreen() {
           url: uri,
           title: "Benche",
         });
+        track("results_share_story_completed");
         setShareModalVisible(false);
       }
     } catch (err) {
@@ -101,6 +114,7 @@ export default function ResultsScreen() {
   };
 
   const handleDislike = (id: string, category: string, title: string) => {
+    track("feedback_disliked", { category, title });
     addFeedback(category, title, false);
     if (supabaseUserId && cardId) {
       upsertFeedback({

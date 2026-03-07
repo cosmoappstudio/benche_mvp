@@ -16,6 +16,8 @@ import { useFeedbackStore } from "@/stores/feedbackStore";
 import { useRecommendationsStore } from "@/stores/recommendationsStore";
 import { saveDailyCard, updateDailyCardRecommendations, incrementProfileTotalPlans } from "@/lib/db";
 import { generateRecommendations } from "@/lib/recommendations";
+import { track } from "@/lib/analytics";
+import { presentPaywallForPlacement, PLACEMENT } from "@/lib/paywall";
 import { TRANSLATIONS } from "@/constants/translations";
 import { colors } from "@/constants/colors";
 
@@ -63,6 +65,9 @@ export default function LoadingScreen() {
   } = useSelectionStore();
   const {
     supabaseUserId,
+    isPro,
+    canRequestRecommendation,
+    incrementWeeklyUsage,
     language,
     interests,
     setLastPlanStats,
@@ -89,6 +94,15 @@ export default function LoadingScreen() {
     setError(null);
 
     const run = async () => {
+      if (!isPro && !canRequestRecommendation()) {
+        if (!cancelled) {
+          setLoading(false);
+          await presentPaywallForPlacement(PLACEMENT.BEFORE_RESULTS);
+          router.replace("/selection");
+        }
+        return;
+      }
+
       let savedCardId: string | null = null;
       if (supabaseUserId) {
         savedCardId = await saveDailyCard({
@@ -112,6 +126,7 @@ export default function LoadingScreen() {
       try {
         const { recommendations } = await generateRecommendations({
           userId: supabaseUserId ?? undefined,
+          isPro,
           color,
           symbol,
           element,
@@ -137,7 +152,14 @@ export default function LoadingScreen() {
               recommendations as Record<string, unknown>[]
             );
           }
-          router.replace("/results");
+          if (!isPro) incrementWeeklyUsage();
+          track("plan_generated", {
+            recommendations_count: recommendations.length,
+          });
+          if (!isPro) {
+            await presentPaywallForPlacement(PLACEMENT.BEFORE_RESULTS);
+          }
+          if (!cancelled) router.replace("/results");
         }
       } catch (err) {
         if (!cancelled) {
@@ -157,6 +179,9 @@ export default function LoadingScreen() {
     };
   }, [
     supabaseUserId,
+    isPro,
+    canRequestRecommendation,
+    incrementWeeklyUsage,
     color,
     symbol,
     element,

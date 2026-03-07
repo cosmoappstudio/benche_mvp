@@ -14,6 +14,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { LinearGradient } from "expo-linear-gradient";
 import { useSelectionStore } from "@/stores/selectionStore";
 import { useUserStore } from "@/stores/userStore";
+import { track } from "@/lib/analytics";
 import { PaintDrop } from "@/components/ui/PaintDrop";
 import { Button } from "@/components/ui/Button";
 import { Icon } from "@/components/ui/Icon";
@@ -50,7 +51,14 @@ export default function SelectionScreen() {
   const isComplete = color && symbol && element && letter && number;
 
   const handleComplete = () => {
-    if (isComplete) router.replace("/loading");
+    if (isComplete) {
+      track("plan_created", {
+        color: color ?? "",
+        symbol: symbol ?? "",
+        element: element ?? "",
+      });
+      router.replace("/loading");
+    }
   };
 
   const selectedColorData = COLORS.find((c) => c.hex === color);

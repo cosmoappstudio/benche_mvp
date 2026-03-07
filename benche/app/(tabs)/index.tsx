@@ -16,6 +16,7 @@ import { useEffect, useState } from "react";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { getPeoplePlannedToday, getSocialProofEnabled } from "@/lib/appConfig";
 import { useUserStore } from "@/stores/userStore";
+import { track } from "@/lib/analytics";
 import { colors } from "@/constants/colors";
 import { TRANSLATIONS } from "@/constants/translations";
 
@@ -154,7 +155,13 @@ export default function HomeScreen() {
         </Animated.Text>
 
         <Animated.View className="w-full max-w-xs" style={buttonStyle}>
-          <Pressable onPress={() => router.push("/selection")} className="w-full">
+          <Pressable
+            onPress={() => {
+              track("home_lets_go_clicked");
+              router.push("/selection");
+            }}
+            className="w-full"
+          >
             <View
               className="rounded-2xl py-4 items-center justify-center w-full"
               style={{

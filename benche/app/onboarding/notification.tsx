@@ -3,7 +3,9 @@ import { useRouter } from "expo-router";
 import { LinearGradient } from "expo-linear-gradient";
 import { requestNotificationPermission } from "@/lib/permissions";
 import { useUserStore } from "@/stores/userStore";
-import { track } from "@/lib/analytics";
+import { track, identify } from "@/lib/analytics";
+import { trackCompleteRegistration } from "@/lib/adsTracking";
+import { presentPaywallForPlacement, PLACEMENT } from "@/lib/paywall";
 import { upsertProfile } from "@/lib/db";
 import { getDeviceInfo } from "@/lib/device";
 import { colors } from "@/constants/colors";
@@ -23,7 +25,19 @@ export default function NotificationScreen() {
   } = useUserStore();
   const t = TRANSLATIONS[language] ?? TRANSLATIONS.en;
 
-  const finishOnboarding = async () => {
+  const finishOnboarding = async (notificationGranted: boolean) => {
+    identify({
+      language: language ?? "en",
+      interests: interests ?? [],
+      location_country: locationCountry ?? "",
+      notification_enabled: notificationGranted,
+    });
+    track("onboarding_completed", {
+      language: language ?? "en",
+      notification_enabled: notificationGranted,
+    });
+    trackCompleteRegistration();
+    await presentPaywallForPlacement(PLACEMENT.ONBOARDING);
     setOnboardingComplete(true);
     router.replace("/(tabs)");
   };
@@ -45,11 +59,12 @@ export default function NotificationScreen() {
         locationCity: locationCity || undefined,
         interests: interests?.length ? interests : undefined,
         expoPushToken: expoPushToken ?? undefined,
+        notificationEnabled: granted,
         deviceOs,
         deviceModel,
       });
     }
-    await finishOnboarding();
+    await finishOnboarding(granted);
   };
 
   const handleSkip = async () => {
@@ -63,11 +78,12 @@ export default function NotificationScreen() {
         locationCountry: locationCountry || undefined,
         locationCity: locationCity || undefined,
         interests: interests?.length ? interests : undefined,
+        notificationEnabled: false,
         deviceOs,
         deviceModel,
       });
     }
-    finishOnboarding();
+    finishOnboarding(false);
   };
 
   return (

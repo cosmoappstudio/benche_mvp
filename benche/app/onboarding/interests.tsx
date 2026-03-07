@@ -4,6 +4,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { INTEREST_OPTIONS, INTERESTS_REQUIRED } from "@/constants/interests";
 import { TRANSLATIONS } from "@/constants/translations";
 import { useUserStore } from "@/stores/userStore";
+import { track } from "@/lib/analytics";
 import { colors } from "@/constants/colors";
 import type { Language } from "@/stores/userStore";
 
@@ -24,6 +25,10 @@ export default function InterestsScreen() {
   const canContinue = interests.length >= INTERESTS_REQUIRED;
 
   const handleContinue = () => {
+    track("onboarding_interests_completed", {
+      interests_count: interests.length,
+      interests: interests.join(","),
+    });
     router.push("/onboarding/location");
   };
 
